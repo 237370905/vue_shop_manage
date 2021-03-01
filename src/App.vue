@@ -23,6 +23,5 @@ body {
   position: relative;
   width: 100%;
   height: 100%;
-  background-color: rgba(182, 182, 182, 0.5);
 }
 </style>
