@@ -53,6 +53,8 @@
 export default {
   created() {
     this.getMenuList();
+  },
+  beforeUpdate() {
     this.activePath = window.sessionStorage.getItem("activePath");
   },
   data() {
