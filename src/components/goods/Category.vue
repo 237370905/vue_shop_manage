@@ -127,7 +127,7 @@
       </el-form>
 
       <span slot="footer" class="dialog-footer">
-        <el-button @click="editDialogClose = false">取 消</el-button>
+        <el-button @click="editDialogVisible = false">取 消</el-button>
         <el-button type="primary" @click="modifyCategory">确 定</el-button>
       </span>
     </el-dialog>
