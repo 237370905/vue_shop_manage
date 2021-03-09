@@ -42,13 +42,28 @@
                 >
                   {{ item }}
                 </el-tag>
-                <el-button
+                <!-- <el-button
                   class="button-new-tag"
                   size="small"
                   @click="showAddTag(slotProps.row)"
                 >
                   新增标记
-                </el-button>
+                </el-button> -->
+                <el-input
+                  v-if="slotProps.row.inputTagVisible"
+                  v-model="slotProps.row.inputTagValue"
+                  ref="saveTagInput"
+                  size="small"
+                  @keyup.enter.native="handleInputConfirm(slotProps.row)"
+                  @blur="handleInputConfirm(slotProps.row)"
+                >
+                </el-input>
+                <el-button
+                  v-else
+                  size="small"
+                  @click="showAddTag(slotProps.row)"
+                  >+ New Tag</el-button
+                >
               </template>
             </el-table-column>
             <el-table-column label="#" type="index"></el-table-column>
@@ -177,28 +192,6 @@
         <el-button type="primary" @click="modifyParam">确 定</el-button>
       </span>
     </el-dialog>
-    <!-- 添加tag dialog -->
-    <el-dialog
-      title="添加标记"
-      :visible.sync="addTagDialogVisible"
-      width="50%"
-      @close="addTagDialogClose"
-    >
-      <el-form
-        :model="addTagForm"
-        label-width="80px"
-        :rules="addTagFormRules"
-        ref="addTagFormRef"
-      >
-        <el-form-item label="标记" prop="name">
-          <el-input v-model="addTagForm.name"></el-input>
-        </el-form-item>
-      </el-form>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="addTagDialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="addTag">确 定</el-button>
-      </span>
-    </el-dialog>
   </div>
 </template>
 <script>
@@ -233,25 +226,6 @@ export default {
       currentParamId: "",
       editForm: {
         attr_name: "",
-      },
-
-      // 新增tag
-      addTagDialogVisible: false,
-      currentParam: null,
-      addTagForm: {
-        name: "",
-      },
-      addTagFormRef: {
-        name: [
-          {
-            required: true,
-            message: "请输入标记",
-            trigger: "blur",
-          },
-        ],
-      },
-      addTagFormRules: {
-        name: [{ required: true, message: "请输入内容", trigger: "blur" }],
       },
     };
   },
@@ -288,6 +262,11 @@ export default {
         params: {
           sel: this.activeTab,
         },
+      });
+      // 解决全局控制新增tag BUG
+      res.data.forEach((element) => {
+        element.inputTagValue = "";
+        element.inputTagVisible = false;
       });
 
       if (this.activeTab === "many") {
@@ -390,34 +369,27 @@ export default {
     },
 
     //tag
-    addTag() {
-      this.$refs.addTagFormRef.validate(async (valid) => {
-        if (!valid) {
-          return this.$message.error("请输入tag 名称！");
+    async addTag(param) {
+      let items = param.attr_vals.split(",");
+      if (!items[0].length) {
+        items.shift();
+      }
+      items.push(param.inputTagValue);
+      let vals = items.join(",");
+      let { data: res } = await this.$http.put(
+        `categories/${this.categoryId}/attributes/${param.attr_id}`,
+        {
+          attr_name: param.attr_name,
+          attr_sel: param.attr_sel,
+          attr_vals: vals,
         }
+      );
 
-        let items = this.currentParam.attr_vals.split(",");
-        if (!items[0].length) {
-          items.shift();
-        }
-        items.push(this.addTagForm.name);
-        let vals = items.join(",");
-        let { data: res } = await this.$http.put(
-          `categories/${this.categoryId}/attributes/${this.currentParam.attr_id}`,
-          {
-            attr_name: this.currentParam.attr_name,
-            attr_sel: this.currentParam.attr_sel,
-            attr_vals: vals,
-          }
-        );
-
-        if (res.meta.status !== 200) {
-          return this.$message.error("增加标记失败！");
-        }
-        this.currentParam.attr_vals = res.data.attr_vals;
-        this.$message.success("增加标记成功！");
-        this.addTagDialogVisible = false;
-      });
+      if (res.meta.status !== 200) {
+        return this.$message.error("增加标记失败！");
+      }
+      param.attr_vals = res.data.attr_vals;
+      this.$message.success("增加标记成功！");
     },
     async removeTag(param, index) {
       if (index < 0) {
@@ -458,28 +430,10 @@ export default {
       param.attr_vals = res.data.attr_vals;
     },
     async showAddTag(param) {
-      let { data: res } = await this.$http.get(
-        `categories/${this.categoryId}/attributes/${param.attr_id}`,
-        {
-          params: {
-            attr_sel: param.attr_sel,
-          },
-        }
-      );
-      console.log(res);
-      if (res.meta.status !== 200) {
-        return this.$message.error("获取参数失败！");
-      }
-      param.attr_id = res.data.attr_id;
-      param.attr_name = res.data.attr_name;
-      param.cat_id = res.data.cat_id;
-      param.attr_sel = res.data.attr_sel;
-      param.attr_write = res.data.attr_write;
-      param.attr_vals = res.data.attr_vals;
-
-      this.currentParam = param;
-      this.$message.success("获取参数成功！");
-      this.addTagDialogVisible = true;
+      param.inputTagVisible = true;
+      this.$nextTick((_) => {
+        this.$refs.saveTagInput.$refs.input.focus();
+      });
     },
     splitTags(param) {
       if (!param || !param.attr_vals.length) {
@@ -487,9 +441,12 @@ export default {
       }
       return param.attr_vals.split(",");
     },
-    addTagDialogClose() {
-      this.currentParamId = "";
-      this.addTagForm.name = "";
+    handleInputConfirm(param) {
+      if (param.inputTagValue.length) {
+        this.addTag(param);
+      }
+      param.inputTagValue = "";
+      param.inputTagVisible = false;
     },
   },
   computed: {
@@ -521,5 +478,8 @@ export default {
 }
 .el-tag {
   margin: 8px;
+}
+.el-input {
+  width: 180px;
 }
 </style>
