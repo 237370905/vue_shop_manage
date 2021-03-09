@@ -21,6 +21,18 @@ axios.interceptors.request.use(config => {
 })
 Vue.prototype.$http = axios
 
+// 定义全局过滤器
+Vue.filter("dateFormater", function(originVal) {
+    let date = new Date(originVal);
+    let y = date.getFullYear();
+    let m = (date.getMonth() + 1 + "").padStart(2, '0');
+    let d = (date.getDate() + "").padStart(2, '0');
+    let hh = (date.getHours() + "").padStart(2, '0');
+    let mm = (date.getMinutes() + "").padStart(2, '0');
+    let ss = (date.getSeconds() + "").padStart(2, '0');
+
+    return `${y}-${m}-${d} ${hh}:${mm}:${ss}`;
+})
 
 
 Vue.config.productionTip = false
