@@ -190,15 +190,7 @@ export default {
       }
       this.categories = res.data.result;
       this.total = res.data.total;
-
-      // 修复从最后一页数据都删除了BUG
-      let total_page = Math.ceil(this.total / this.queryInfo.pagesize);
-      if (this.queryInfo.pagenum > total_page) {
-        this.queryInfo.pagenum = total_page;
-        this.getCategories();
-      } else {
-        this.$message.success("获取分类成功！");
-      }
+      this.$message.success("获取分类成功！");
     },
     // 分页
     handleSizeChange(val) {
@@ -318,6 +310,9 @@ export default {
         return this.$message.error("删除分类失败!");
       }
       this.$message.success("删除分类成功！");
+      if (this.categories.length === 1) {
+        this.queryInfo.pagenum -= 1;
+      }
       this.getCategories();
     },
   },
