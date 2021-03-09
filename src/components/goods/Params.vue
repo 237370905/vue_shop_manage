@@ -442,7 +442,7 @@ export default {
       return param.attr_vals.split(",");
     },
     handleInputConfirm(param) {
-      if (param.inputTagValue.length) {
+      if (param.inputTagValue.trim().length) {
         this.addTag(param);
       }
       param.inputTagValue = "";
