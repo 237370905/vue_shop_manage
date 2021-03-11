@@ -42,7 +42,7 @@
           </el-submenu>
         </el-menu>
       </el-aside>
-      <el-main>
+      <el-main :style="isCollapse ? 'left: 64px;' : 'left: 200px;'">
         <router-view />
       </el-main>
     </el-container>
@@ -98,6 +98,7 @@ export default {
   height: 100%;
 }
 .el-header {
+  position: relative;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -116,6 +117,10 @@ export default {
   }
 }
 .el-aside {
+  position: absolute;
+  top: 60px;
+  left: 0;
+  bottom: 0;
   background-color: #333744;
   .el-menu {
     border-right: none;
@@ -127,6 +132,11 @@ export default {
 }
 
 .el-main {
+  position: absolute;
+  right: 0;
+  top: 60px;
+  bottom: 0;
+  overflow-y: scroll;
   background-color: #eaedf1;
 }
 .toggle-botton {
