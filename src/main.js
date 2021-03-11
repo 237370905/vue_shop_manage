@@ -8,7 +8,7 @@ import './assets/css/global.css'
 import './assets/fonts/iconfont.css'
 
 // Element 配置
-import ElementUI from 'element-ui'
+import ElementUI, { Form } from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
 
 // 富文本编辑器
@@ -18,14 +18,27 @@ import 'quill/dist/quill.core.css' // import styles
 import 'quill/dist/quill.snow.css' // for snow theme
 import 'quill/dist/quill.bubble.css' // for bubble theme
 
+// 导入NProgress
+import NProgress from 'nprogress'
+import 'nprogress/nprogress.css'
+
 // 配置网络请求
 import axios from 'axios'
 // 配置服务器基准根路径
 axios.defaults.baseURL = 'http://127.0.0.1:8888/api/private/v1/'
 axios.interceptors.request.use(config => {
+    // 增加进度条
+    NProgress.start()
     config.headers.Authorization = window.sessionStorage.getItem('token')
     return config
 })
+
+axios.interceptors.response.use(config => {
+    // 增加进度条
+    NProgress.done()
+    return config
+})
+
 Vue.prototype.$http = axios
 
 // 定义全局过滤器
